@@ -415,14 +415,14 @@
               <FilePath>.\oled.c</FilePath>
             </File>
             <File>
-              <FileName>Cellular.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>.\Cellular.c</FilePath>
-            </File>
-            <File>
               <FileName>dma.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\dma.c</FilePath>
+            </File>
+            <File>
+              <FileName>Graphics.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\Graphics.c</FilePath>
             </File>
           </Files>
         </Group>

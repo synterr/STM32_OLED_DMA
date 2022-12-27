@@ -6,6 +6,7 @@
 #include "math.h"
 #include "tools.h"
 #include "dma.h"
+#include "Graphics.h"
 
 #define SSD1327_BUFFERSIZE	(SSD1327_LCDHEIGHT * SSD1327_LCDWIDTH / 2)
 
@@ -139,6 +140,7 @@ void SSD1327_SpiInit(void)
 	SSD1327_Reset();
 
 	SSD1327_Init();
+  set_buf_ref(buffer);
 }
 
 

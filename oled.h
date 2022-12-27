@@ -16,7 +16,7 @@
 #define SSD1327_LCDWIDTH                  128
 #define SSD1327_LCDHEIGHT                 128
 
-//#define DOUBLE_BUFFER 1
+#define DOUBLE_BUFFER
 
 //
 // Commands

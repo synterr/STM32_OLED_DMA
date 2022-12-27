@@ -7,15 +7,13 @@
 #include "spi.h"
 #include "tools.h"
 #include "oled.h"
-#include "Cellular.h"
+#include "Graphics.h"
 
 void EXTI15_10_IRQHandler(void);
 void DMA2_Stream3_IRQHandler(void);
 
 static volatile uint32_t msTicks;                                 // counts 1ms timeTicks
 static long cnt = 0;
-
-static volatile uint8_t reinitialize = 0;
 
 void SysTick_Handler(void);
 void Delay (uint32_t dlyTicks);
@@ -92,36 +90,78 @@ int main (void) {
   spi_init();
   dma_spi_enable();
   SSD1327_SpiInit();
-  SSD1327_SetContrast(0x50);
+  graphics_init();
+  SSD1327_SetContrast(0x10);
   SSD1327_Clear(BLACK);
   
-  InitCells(1);
-  SwapCells();
+  //cube size
+  float cs = 1.0f; 
+  float cn = -1.0f; // negative or zero
+ 
+ 
+  vec3 points[8]= {
+    {cn, cn, cn},
+    {cs, cn, cn},
+    {cs, cs, cn},
+    {cn, cs, cn},
+    
+    {cn, cn, cs},
+    {cs, cn, cs},
+    {cs, cs, cs},
+    {cn, cs, cs},
+  };
   
+  connection connections[12]= {
+    {0,4},
+    {1,5},
+    {2,6},
+    {3,7},
+
+    {0,1},
+    {1,2},
+    {2,3},
+    {3,0},
+    
+    {4,5},
+    {5,6},
+    {6,7},
+    {7,4},    
+  };
   while(1) {
 
     NVIC_DisableIRQ(EXTI15_10_IRQn);
-
+    
+    //Update display buffer with DMA
     if (get_transfer() == 0)
     {
-          cnt++;
-      if (reinitialize == 1)
-      {
-        SSD1327_Display();
-        SSD1327_Clear(BLACK);
-        InitCells(cnt);
-        SwapCells();
-
-        reinitialize = 0;
-        continue;
-      }
-
-      CalcCells();
-      SwapCells();      
+      cnt++;
+      
       SSD1327_Display();
-
-
     }
+    //Write to buffer here
+    if (get_transfer() == 1)
+    {
+      SSD1327_Clear(BLACK);
+      for (int p = 0; p < 8; p++)
+      {
+        rotate(&points[p],0.002f,0.001f,0.0001f);
+        //SSD1327_DrawPixel(points[p].x + 64, points[p]. y + 64, 15);
+      }
+      for (int c = 0; c < 12; c++)
+      {
+        GFX_DrawLine(project(points[connections[c].a]).x*128 + 64, project(points[connections[c].a]).y*128 + 64, 
+                        project(points[connections[c].b]).x*128 + 64, project(points[connections[c].b]).y*128 +64, 15);
+      }
+      char str[40];
+      sprintf(str, "Frames:%d", cnt%100);
+      GFX_DrawString(13,4,str,15,0,1);
+      GFX_DrawFillCircle(4, 7, 1+2.0f+sinf((float)cnt/7.0f)*2.0f, 15);
+      sprintf(str, "out of the ");
+      GFX_DrawString(3,113,str,15,0,1);
+      sprintf(str, "box");
+      GFX_DrawString(70,100,str,15,0,3);
+    }
+
     
     NVIC_EnableIRQ(EXTI15_10_IRQn);  
   }
@@ -131,7 +171,7 @@ void EXTI15_10_IRQHandler(void) {
   if (EXTI->PR & (1 << BTN_PINPOS) ) {
     /* clear the interrupt flag by writing a 1 */
     EXTI->PR |= (1 << BTN_PINPOS);
-    reinitialize = 1;
+
   }
 }
 
